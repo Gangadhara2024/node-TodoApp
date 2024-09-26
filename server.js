@@ -34,15 +34,28 @@ app.post("/registerform", async (req, res) => {
     return res.status(400).json(error);
   }
 
-  const HashedPassword = await bcrypt.hash(password, Number(process.env.SALT));
-
-  const userObj = new userModel({
-    name: name,
-    email: email,
-    username: username,
-    password: HashedPassword,
-  });
   try {
+    const userEmailExists = await userModel.findOne({ email: email });
+    if (userEmailExists) {
+      return res.status(400).json("email already exists");
+    }
+
+    const usernameExists = await userModel.findOne({ username: username });
+    if (usernameExists) {
+      return res.status(400).json("username already exists");
+    }
+
+    const HashedPassword = await bcrypt.hash(
+      password,
+      Number(process.env.SALT)
+    );
+
+    const userObj = new userModel({
+      name: name,
+      email: email,
+      username: username,
+      password: HashedPassword,
+    });
     const userDB = await userObj.save();
 
     return res.status(201).json({
@@ -56,6 +69,11 @@ app.post("/registerform", async (req, res) => {
 
 app.get("/loginform", (req, res) => {
   return res.render("loginPage");
+});
+
+app.post("/loginform", (req, res) => {
+  console.log(req.body);
+  return res.send("all ok");
 });
 app.listen(PORT, () => {
   console.log(`server is on http://localhost:${PORT}`);
